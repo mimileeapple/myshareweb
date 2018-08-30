@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.idelweb.dao.DBMapper">
+	<!-- ****************會員資料********************** -->
+		<!-- 新增會員 -->
+<insert id="insertcust" parameterType="java.util.Map" flushCache="true">
+INSERT INTO cust (custpinying,custpwd,custnick,mail,brithday) 
+VALUES (#{custpinying},#{custpwd},#{custnick},#{mail},#{brithday})
+</insert>
+		<!-- 查詢是否有此會員 -->
+<select id="selectCust" parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT * FROM cust where custpinying = #{custpinying}
+</select>
+		<!-- 更新會員資料 -->
+<update id="updateCust">
+UPDATE cust SET custpwd=#{custpwd},custnick=#{custnick},mail=#{mail}
+ WHERE custpinying= #{custpinying}
+</update>
+<!-- 忘記密碼 -->
+<select id="forget" parameterType="java.util.Map" resultType="java.lang.String">
+SELECT custpwd FROM cust where custpinying =#{custpinying} and mail=#{mail}
+</select>
+<!-- ****************產品資料********************** -->
+<!-- 新增產品資料 -->
+<insert id="insertproduct" parameterType="java.util.Map" flushCache="true">
+INSERT INTO product(pclass, adddate,pname,price,city,town,
+discription,userno) 
+VALUES (#{pclass},#{adddate},#{pname},#{price},
+#{city},#{town},#{discription},#{userno})
+</insert>
+
+<!--*********************搜尋產品 *********************-->
+<!-- 查詢產品資料  pname不等於空直-->
+<select id="selectproduct" parameterType="java.util.Map" resultType="java.util.HashMap">
+SELECT p.pno,p.pclass,p.pname,p.price,p.discription,p.userno,c.city,c.area town
+from product p,citycode c where p.city=#{city} and p.town=#{town}
+and p.city=c.cityno and p.town=c.areano and pname LIKE "%"#{pname}"%" 
+ </select>
+ <!-- 查詢產品資料  pname等於空直-->
+<select id="selectproductnull" parameterType="java.util.Map" resultType="java.util.HashMap">
+SELECT p.pno,p.pclass,p.pname,p.price,p.discription,p.userno,c.city,c.area town
+from product p,citycode c where p.city=#{city} and p.town=#{town}
+and p.city=c.cityno and p.town=c.areano
+ </select>
+  <!-- 查詢產品資料  三樣都等於空直-->
+<select id="selectproductall" parameterType="java.util.Map" resultType="java.util.HashMap">
+SELECT p.pno,p.pclass,p.pname,p.price,p.discription,p.userno,c.city,c.area town
+from product p,citycode c where
+ p.city=c.cityno and p.town=c.areano
+group by pno 
+ </select>
+ 
+  <!-- 查詢產品資料  pname有值 其他沒值-->
+<select id="selectproductonlypname" parameterType="java.lang.String" resultType="java.util.HashMap">
+ SELECT p.pno,p.pclass,p.pname,p.price,p.discription,p.userno,c.city,c.area town
+from product p,citycode c where p.city=c.cityno and p.town=c.areano and pname LIKE "%"#{pname}"%"
+
+ </select>
+ 
+
+ 
+ <!--*********************查詢個人資料*********************-->
+	<!-- 查詢我的上架資料 -->
+<select id="selectmyproduct"  parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT p.pno,p.pclass,p.adddate,p.costomrno,p.pname,p.price,a.city,a.area town,p.orderdate,p.senddate,
+c.custpinying user
+From product p,cust c,citycode a
+where c.custno=p.userno and c.custpinying=#{custpinying}
+and p.city=a.cityno and p.town=a.areano
+group by p.pno
+</select>
+	<!-- 查詢我的預約資料 -->
+<select id="selectmyorder"  parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT p.pno,p.pclass,p.adddate,p.costomrno,p.pname,p.price,a.city,a.area town,p.senddate,
+c.custpinying user,p.orderdate
+From product p,cust c,citycode a
+where c.custno=p.userno and p.costomrno=#{costomrno}
+and p.city=a.cityno and p.town=a.areano
+group by p.pno
+</select>
+<!-- 查詢問與答個人資料.還沒回復的問答-->
+<select id="selectdialogmain"  parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT d.no, d.productno,d.date,p.pno,p.pname,d.dfrom,d.message,d.ans,p.userno,c.custpinying
+from dialog d,product p,cust c
+where c.custno=p.userno and c.custpinying=#{custpinying} and ans="0"
+and d.productno=p.pno 
+order by productno,d.no
+	
+</select>
+<!-- 查詢產品詳細資料 -->
+<select id="selectproductmain"  parameterType="java.lang.Integer" resultType="java.util.HashMap">
+SELECT p.pno,p.pname,p.price,c.custpinying,a.city,a.area town,p.userno
+from product p,citycode a,cust c
+where p.pno=#{pno} and p.city=a.cityno and p.town=a.areano
+and p.userno=c.custno
+</select>
+<!-- 查詢用戶no -->
+<select id="selectcustno"  parameterType="java.lang.String" resultType="java.lang.String">
+SELECT custno
+from cust 
+where custpinying=#{custpinying}
+</select>
+<!-- 查詢用戶名字 -->
+<select id="selectcustname"  parameterType="java.lang.Integer" resultType="java.lang.String">
+SELECT custpinying
+from cust 
+where custno=#{custno}
+</select>
+<!-- 我要預約 -->
+<update id="addorder">
+UPDATE product SET costomrno=#{costomrno},orderdate=#{orderdate},senddate=#{senddate}
+ WHERE pno=#{pno}	
+</update>
+<!-- ans回復 -->
+<update id="updateans">
+UPDATE dialog SET ans=#{ans}
+ WHERE no=#{no}
+</update>	
+<!-- 我的問與答資料-->
+<select id="selectmydialog"  parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT d.no, d.productno,d.date,p.pno,p.pname,d.dfrom,d.message,d.ans,p.userno,c.custpinying
+from dialog d,product p,cust c
+where c.custno=p.userno and dfrom="tom" 
+and d.productno=p.pno 
+order by productno,d.no
+	</select>
+
+
+	
+<!-- ***************聯絡我們********************** -->
+<!-- 新增聯絡我們資料 -->	
+<insert id="insertcontact" parameterType="java.util.Map" flushCache="true">
+INSERT INTO contact (name,email,subject,phone,address,message,date) 
+VALUES (#{name},#{email},#{subject},#{phone},#{address},#{message},#{date})
+</insert>
+
+<!-- 查詢聯絡我們資料 -->
+<select id="selectcontact"  parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT *From contact 
+</select>
+
+<!-- 新增留言資料 -->
+<insert id="insertdialog">
+INSERT INTO dialog(productno,date,dfrom,message,ans)
+VALUES(#{productno},#{date},#{dfrom},#{message},#{ans})
+</insert>
+<!-- 查詢留言資料 -->
+<select id="selectdialog"  parameterType="java.lang.Integer" resultType="java.util.HashMap">
+SELECT *From dialog  where productno=#{productno}
+</select>
+
+
+
+
+<!-- 查詢管理員資料 -->
+<select id="selectroot" parameterType="java.lang.String" resultType="java.util.HashMap">
+SELECT root_name,root_pwd FROM rootmanage where root_name=#{root_name}
+</select>
+	
+
+
+</mapper>
